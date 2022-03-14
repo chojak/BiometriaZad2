@@ -16,38 +16,6 @@ namespace BiometriaZad2
         public int[] red = null;
         private int[] green = null;
         private int[] blue = null;
-
-        public int[] Histogram(Bitmap bmp, WpfPlot wpfPlot)
-        {
-            int bmpHeight = bmp.Height;
-            int bmpWidth = bmp.Width;
-
-            double[] histogram = new double[256];
-            double[] histogramX = new double[256];
-
-            red = new int[256];
-            green = new int[256];
-            blue = new int[256];    
-
-            for (int i = 0; i < histogramX.Length; i++)
-                histogramX[i] = i;
-
-            for (int x = 0; x < bmpWidth; x++)
-            {
-                for (int y = 0; y < bmpHeight; y++)
-                {
-                    Color pixel = bmp.GetPixel(x, y);
-
-                    red[pixel.R]++;
-                    green[pixel.G]++;
-                    blue[pixel.B]++;
-
-                    int mean = (pixel.R + pixel.G + pixel.B) / 3;
-                    histogram[mean]++;
-                }
-            }
-            return histogram.Select(d => (int)d).ToArray();
-        }
         private int[] calculateLUT(int[] histogram)
         {
             int minValue = 0;
@@ -98,61 +66,25 @@ namespace BiometriaZad2
 
             return result;
         }
-        public Bitmap HistogramStretching(Bitmap bmp, WpfPlot wpfPlot)
+        private void MakePlot(int[] histogram, WpfPlot wpfPlot)
         {
-            int[] histogram = Histogram(bmp, wpfPlot);
+            double[] histogramX = new double[256];
+            double[] histogramY = new double[256];
 
-            int[] LUTred = calculateLUT(red);
-            int[] LUTgreen = calculateLUT(green);
-            int[] LUTblue = calculateLUT(blue);
-
-            red = new int[256];
-            green = new int[256];
-            blue = new int[256];
-            
-            Bitmap newBitmap = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-
-            for (int x = 0; x < bmp.Width; x++)
+            for (int i = 0; i < 256; i++)
             {
-                for (int y = 0; y < bmp.Height; y++)
-                {
-                    Color pixel = bmp.GetPixel(x, y);
-                    Color newPixel = Color.FromArgb(LUTred[pixel.R], LUTgreen[pixel.G], LUTblue[pixel.B]);
-                    newBitmap.SetPixel(x, y, newPixel);
-                    red[newPixel.R]++;
-                    green[newPixel.G]++;
-                    blue[newPixel.B]++;
-                }
+                histogramX[i] = i;
+                histogramY[i] = histogram[i];
             }
 
-            return newBitmap;
-        }
-        public Bitmap HistogramEqualization(Bitmap bmp, WpfPlot wpfPlot)
-        {
-            int[] LUTred = calculateLUT(red, bmp.Width * bmp.Height);
-            int[] LUTgreen = calculateLUT(green, bmp.Width * bmp.Height);
-            int[] LUTblue = calculateLUT(blue, bmp.Width * bmp.Height);
-
-            red = new int[256];
-            green = new int[256];
-            blue = new int[256];
-            Bitmap newBitmap = new Bitmap(bmp.Width, bmp.Height, PixelFormat.Format24bppRgb);
-            for (int x = 0; x < bmp.Width; x++)
-            {
-                for (int y = 0; y < bmp.Height; y++)
-                {
-                    Color pixel = bmp.GetPixel(x, y);
-                    Color newPixel = Color.FromArgb(LUTred[pixel.R], LUTgreen[pixel.G], LUTblue[pixel.B]);
-                    newBitmap.SetPixel(x, y, newPixel);
-                    red[newPixel.R]++;
-                    green[newPixel.G]++;
-                    blue[newPixel.B]++;
-                }
-            }
-            return newBitmap;
+            wpfPlot.Plot.Clear();
+            wpfPlot.Plot.AddScatter(histogramX, histogramY);
+            wpfPlot.Render();
         }
         public byte Otsu(Bitmap bmp, WpfPlot wpfPlot)
         {
+            // https://www.programmerall.com/article/1106135802/
+
             int[] tmp = Histogram(bmp, wpfPlot);
             double[] histogram = tmp.Select(x => (double)x).ToArray();
 
@@ -185,20 +117,95 @@ namespace BiometriaZad2
                 }
             }
 
-            double[] histogramX = new double[256];
-            double[] histogramY = new double[256];
+            return (byte)threshold;
+        }
+        public int[] Histogram(Bitmap bmp, WpfPlot wpfPlot)
+        {
+            int bmpHeight = bmp.Height;
+            int bmpWidth = bmp.Width;
 
-            for (int i = 0; i < 256; i++)
-            {
+            double[] histogram = new double[256];
+            double[] histogramX = new double[256];
+
+            red = new int[256];
+            green = new int[256];
+            blue = new int[256];    
+
+            for (int i = 0; i < histogramX.Length; i++)
                 histogramX[i] = i;
-                histogramY[i] = histogram[i];
+
+            for (int x = 0; x < bmpWidth; x++)
+            {
+                for (int y = 0; y < bmpHeight; y++)
+                {
+                    Color pixel = bmp.GetPixel(x, y);
+
+                    red[pixel.R]++;
+                    green[pixel.G]++;
+                    blue[pixel.B]++;
+
+                    int mean = (pixel.R + pixel.G + pixel.B) / 3;
+                    histogram[mean]++;
+                }
             }
 
-            wpfPlot.Plot.Clear();
-            wpfPlot.Plot.AddScatter(histogramX, histogramY);
-            wpfPlot.Render();
+            MakePlot(histogram.Select(d => (int)d).ToArray(), wpfPlot);
+            return histogram.Select(d => (int)d).ToArray();
+        }
+        public Bitmap HistogramStretching(Bitmap bmp, WpfPlot wpfPlot)
+        {
+            int[] histogram = Histogram(bmp, wpfPlot);
 
-            return (byte)threshold;
+            int[] LUTred = calculateLUT(red);
+            int[] LUTgreen = calculateLUT(green);
+            int[] LUTblue = calculateLUT(blue);
+
+            red = new int[256];
+            green = new int[256];
+            blue = new int[256];
+            
+
+            Bitmap newBitmap = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+            for (int x = 0; x < bmp.Width; x++)
+            {
+                for (int y = 0; y < bmp.Height; y++)
+                {
+                    Color pixel = bmp.GetPixel(x, y);
+                    Color newPixel = Color.FromArgb(LUTred[pixel.R], LUTgreen[pixel.G], LUTblue[pixel.B]);
+                    newBitmap.SetPixel(x, y, newPixel);
+                    red[newPixel.R]++;
+                    green[newPixel.G]++;
+                    blue[newPixel.B]++;
+                }
+            }
+
+            //MakePlot(newHistogram.Select(d => (int)d).ToArray(), wpfPlot);
+            return newBitmap;
+        }
+        public Bitmap HistogramEqualization(Bitmap bmp, WpfPlot wpfPlot)
+        {
+            int[] LUTred = calculateLUT(red, bmp.Width * bmp.Height);
+            int[] LUTgreen = calculateLUT(green, bmp.Width * bmp.Height);
+            int[] LUTblue = calculateLUT(blue, bmp.Width * bmp.Height);
+
+            red = new int[256];
+            green = new int[256];
+            blue = new int[256];
+            Bitmap newBitmap = new Bitmap(bmp.Width, bmp.Height, PixelFormat.Format24bppRgb);
+            for (int x = 0; x < bmp.Width; x++)
+            {
+                for (int y = 0; y < bmp.Height; y++)
+                {
+                    Color pixel = bmp.GetPixel(x, y);
+                    Color newPixel = Color.FromArgb(LUTred[pixel.R], LUTgreen[pixel.G], LUTblue[pixel.B]);
+                    newBitmap.SetPixel(x, y, newPixel);
+                    red[newPixel.R]++;
+                    green[newPixel.G]++;
+                    blue[newPixel.B]++;
+                }
+            }
+            return newBitmap;
         }
         public Bitmap BinaryThreshold(Bitmap bmp, byte threshold)
         {

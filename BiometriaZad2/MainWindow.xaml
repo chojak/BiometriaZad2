@@ -24,12 +24,11 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
-
             </Grid.ColumnDefinitions>
-            
-            
-            <Button Margin="60,5,60,5" x:Name="ChoseFile" Grid.Row="1" Click="ChoseFile_Click">Choose a photo</Button>
-            <Button Margin="60,5,60,5" x:Name="OtsuAlgorithm" Grid.Row="1" Grid.Column="1" Click="OtsuAlgorithm_Click">Otsu algorithm</Button>
+            <Button Margin="30,5,30,5" x:Name="ChoseFile" Click="ChoseFile_Click">Choose a photo</Button>
+            <Button Margin="30,5,30,5" x:Name="Stretching" Grid.Column="1" Click="Stretching_Click">Stretching</Button>
+            <Button Margin="30,5,30,5" x:Name="Equalization" Grid.Column="2" Click="Equalization_Click">Equalization</Button>
+            <Button Margin="30,5,30,5" x:Name="OtsuAlgorithm" Grid.Column="3" Click="OtsuAlgorithm_Click">Otsu algorithm</Button>
         </Grid>
     </Grid>
 </Window>

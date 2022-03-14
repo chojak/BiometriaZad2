@@ -58,21 +58,23 @@ namespace BiometriaZad2
                 Source = openFileDialog.FileName;
                 ImageBitmap = new Bitmap(Source);
                 Image.Source = BitmapToImageSource(ImageBitmap);
+                Algorithm2.Histogram(ImageBitmap, WpfPlot1);
             }
         }
 
         private void OtsuAlgorithm_Click(object sender, RoutedEventArgs e)
         {
-            //Algorithm.HistogramTest(ImageBitmap, WpfPlot1);
-            //Algorithm.HistogramStretching(ImageBitmap, WpfPlot1);
+            Image.Source = BitmapToImageSource(Algorithm2.BinaryThreshold(ImageBitmap, Algorithm2.Otsu(ImageBitmap, WpfPlot1)));
+        }
 
-            //ImageBitmap = new Bitmap(Algorithm2.HistogramStretching(ImageBitmap, WpfPlot1));
-            //Image.Source = BitmapToImageSource(ImageBitmap);
-            //ImageBitmap = new Bitmap(Algorithm2.HistogramEqualization(ImageBitmap, WpfPlot1));
-            //Image.Source = BitmapToImageSource(ImageBitmap);
+        private void Stretching_Click(object sender, RoutedEventArgs e)
+        {
+            Image.Source = BitmapToImageSource(Algorithm2.HistogramStretching(ImageBitmap, WpfPlot1));
+        }
 
-            ImageBitmap = Algorithm2.BinaryThreshold(ImageBitmap, Algorithm2.Otsu(ImageBitmap, WpfPlot1));
-            Image.Source = BitmapToImageSource(ImageBitmap);
+        private void Equalization_Click(object sender, RoutedEventArgs e)
+        {
+            Image.Source = BitmapToImageSource(Algorithm2.HistogramEqualization(ImageBitmap, WpfPlot1));
         }
     }
 }
