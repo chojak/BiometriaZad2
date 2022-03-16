@@ -24,8 +24,10 @@ namespace BiometriaZad2
     public partial class MainWindow : Window
     {
         public string Source = "";
+        public Bitmap OriginalBitmap;
         public Bitmap ImageBitmap;
         public Zadanie2Algorithm Algorithm2;
+        public int BrightnessThreshold = 0;
         private BitmapImage BitmapToImageSource(System.Drawing.Bitmap bitmap)
         {
             using (MemoryStream memory = new MemoryStream())
@@ -44,11 +46,9 @@ namespace BiometriaZad2
         {
             InitializeComponent();
 
-            Image.MaxHeight = 500;
-            Image.MaxWidth = 800;
             Algorithm2 = new Zadanie2Algorithm();
+            //BrightnessThreshold = 0;
         }
-
         private void ChoseFile_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -56,25 +56,37 @@ namespace BiometriaZad2
             if (openFileDialog.ShowDialog() == true)
             {
                 Source = openFileDialog.FileName;
+                OriginalBitmap = new Bitmap(Source);
                 ImageBitmap = new Bitmap(Source);
                 Image.Source = BitmapToImageSource(ImageBitmap);
-                Algorithm2.Histogram(ImageBitmap, WpfPlot1);
+                Algorithm2.Histogram(ImageBitmap, WpfPlot);
             }
         }
-
         private void OtsuAlgorithm_Click(object sender, RoutedEventArgs e)
         {
-            Image.Source = BitmapToImageSource(Algorithm2.BinaryThreshold(ImageBitmap, Algorithm2.Otsu(ImageBitmap, WpfPlot1)));
+            Image.Source = BitmapToImageSource(Algorithm2.BinaryThreshold(ImageBitmap, Algorithm2.Otsu(ImageBitmap, WpfPlot), WpfPlot));
         }
-
         private void Stretching_Click(object sender, RoutedEventArgs e)
         {
-            Image.Source = BitmapToImageSource(Algorithm2.HistogramStretching(ImageBitmap, WpfPlot1));
+            Image.Source = BitmapToImageSource(Algorithm2.HistogramStretching(ImageBitmap, WpfPlot, StretchingValue.Value));
         }
-
         private void Equalization_Click(object sender, RoutedEventArgs e)
         {
-            Image.Source = BitmapToImageSource(Algorithm2.HistogramEqualization(ImageBitmap, WpfPlot1));
+            Image.Source = BitmapToImageSource(Algorithm2.HistogramEqualization(OriginalBitmap, WpfPlot));
+        }
+        private void Brightness_Click(object sender, RoutedEventArgs e)
+        {
+            Image.Source = BitmapToImageSource(Algorithm2.HistogramBightnessPL(ImageBitmap, BrightnessThreshold, WpfPlot));
+        }
+        private void Orginial_Click(object sender, RoutedEventArgs e)
+        {
+            Image.Source = BitmapToImageSource((Bitmap)OriginalBitmap);
+            Algorithm2.Histogram(OriginalBitmap, WpfPlot);
+        }
+        private void Threshold_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            BrightnessThreshold = (int)Threshold.Value;
+            ThresholdLabel.Content = "Threshold: " + BrightnessThreshold;
         }
     }
 }

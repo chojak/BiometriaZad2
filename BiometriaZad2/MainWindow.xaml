@@ -16,19 +16,43 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Image x:Name="Image"></Image>
-        <WpfPlot x:Name="WpfPlot1" Grid.Column="1" ></WpfPlot>
-
+        <WpfPlot x:Name="WpfPlot" Grid.Column="1" ></WpfPlot>
         <Grid Grid.Row="1" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Margin="30,5,30,5" x:Name="ChoseFile" Click="ChoseFile_Click">Choose a photo</Button>
-            <Button Margin="30,5,30,5" x:Name="Stretching" Grid.Column="1" Click="Stretching_Click">Stretching</Button>
-            <Button Margin="30,5,30,5" x:Name="Equalization" Grid.Column="2" Click="Equalization_Click">Equalization</Button>
-            <Button Margin="30,5,30,5" x:Name="OtsuAlgorithm" Grid.Column="3" Click="OtsuAlgorithm_Click">Otsu algorithm</Button>
+            <Button Margin="10,5,10,5" x:Name="ChoseFile" Click="ChoseFile_Click">Choose a photo</Button>
+            <Button Margin="30,5,30,5" x:Name="Orginial" Grid.Column="1" Click="Orginial_Click">Original</Button>
+            <Grid Grid.Column="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Button Margin="5,5,5,5" x:Name="Brightness" Grid.Column="0" Click="Brightness_Click">Brightness</Button>
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Slider x:Name="Threshold" VerticalAlignment="Center" ValueChanged="Threshold_ValueChanged" Minimum="0" Maximum="250"/>
+                    <Label x:Name="ThresholdLabel" Content="Threshold:" Grid.Row="1"></Label>
+                </Grid>
+            </Grid>
+            <Grid Grid.Column="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                    <Button x:Name="Stretching" Grid.Column="0" Click="Stretching_Click">Stretching</Button>
+                    <Slider Grid.Column="1" x:Name="StretchingValue" VerticalAlignment="Center" Minimum="0" Maximum="255"></Slider>
+            </Grid>
+            <Button Margin="30,5,30,5" x:Name="Equalization" Grid.Column="4" Click="Equalization_Click">Equalization</Button>
+            <Button Margin="10,5,10,5" x:Name="OtsuAlgorithm" Grid.Column="5" Click="OtsuAlgorithm_Click">Otsu algorithm</Button>
         </Grid>
     </Grid>
 </Window>

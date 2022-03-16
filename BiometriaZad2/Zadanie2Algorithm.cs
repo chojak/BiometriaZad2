@@ -13,10 +13,10 @@ namespace BiometriaZad2
 {
     public class Zadanie2Algorithm
     {
-        public int[] red = null;
-        private int[] green = null;
-        private int[] blue = null;
-        private int[] calculateLUT(int[] histogram)
+        private int[] red;
+        private int[] green;
+        private int[] blue;
+        private int[] calculateLUT(int[] histogram, double threshold)
         {
             int minValue = 0;
             int maxValue = 255;
@@ -36,7 +36,7 @@ namespace BiometriaZad2
                 }
 
             int[] lut = new int[256];
-            double a = 255.0 / (maxValue - minValue);
+            double a = threshold / (maxValue - minValue);
             for (int i = 0; i < lut.Length; i++)
             {
                 lut[i] = (int)(a * (i - minValue));
@@ -58,6 +58,7 @@ namespace BiometriaZad2
 
             int[] result = new int[256];
             double sum = 0;
+
             for (int i = 0; i < 256; i++)
             {
                 sum += histogram[i];
@@ -105,8 +106,8 @@ namespace BiometriaZad2
             double w = 0, u = 0;
             for (int i = 0; i < 256; i++)
             {
-                w += histogram[i];  //Assuming that the current gray level i is the threshold value, the pixels of 0~i gray level (assuming that the pixels with the pixel value in this range are called foreground pixels) are the proportion of the entire image      
-                u += i * histogram[i];  //  Average gray value of pixels (0~i) before gray level i: average gray value of foreground pixels      
+                w += histogram[i];  
+                u += i * histogram[i];
                 double t = avgValue * w - u;
                 double variance = t * t / (w * (1 - w));
                 
@@ -125,14 +126,10 @@ namespace BiometriaZad2
             int bmpWidth = bmp.Width;
 
             double[] histogram = new double[256];
-            double[] histogramX = new double[256];
 
             red = new int[256];
             green = new int[256];
             blue = new int[256];    
-
-            for (int i = 0; i < histogramX.Length; i++)
-                histogramX[i] = i;
 
             for (int x = 0; x < bmpWidth; x++)
             {
@@ -152,19 +149,80 @@ namespace BiometriaZad2
             MakePlot(histogram.Select(d => (int)d).ToArray(), wpfPlot);
             return histogram.Select(d => (int)d).ToArray();
         }
-        public Bitmap HistogramStretching(Bitmap bmp, WpfPlot wpfPlot)
+        public Bitmap HistogramBrightness(Bitmap bmp, int Value, WpfPlot wpfPlot)
+        {
+            Bitmap TempBitmap = new Bitmap(bmp);
+            float FinalValue = (float)Value / 255.0f;
+            Bitmap NewBitmap = new Bitmap(TempBitmap.Width, TempBitmap.Height);
+            Graphics NewGraphics = Graphics.FromImage(NewBitmap);
+            float[][] FloatColorMatrix = {
+                     new float[] {1, 0, 0, 0, 0},
+                     new float[] {0, 1, 0, 0, 0},
+                     new float[] {0, 0, 1, 0, 0},
+                     new float[] {0, 0, 0, 1, 0},
+                     new float[] {FinalValue, FinalValue, FinalValue, 1, 1}
+            };
+            ColorMatrix NewColorMatrix = new ColorMatrix(FloatColorMatrix);
+            ImageAttributes Attributes = new ImageAttributes();
+
+            Attributes.SetColorMatrix(NewColorMatrix);
+            NewGraphics.DrawImage(TempBitmap, new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), 0, 0, TempBitmap.Width, TempBitmap.Height, System.Drawing.GraphicsUnit.Pixel, Attributes);
+            Attributes.Dispose();
+            NewGraphics.Dispose();
+
+            MakePlot(Histogram(NewBitmap, wpfPlot), wpfPlot);
+            return NewBitmap;
+        }
+        public Bitmap HistogramBightnessPL(Bitmap bmp, int Value, WpfPlot wpfPlot)
+        {
+            byte[] LUT = new byte[256];
+            int b = Value;
+
+            for (int i = 0; i < 256; i++)
+            {
+                if ((b + i) > 255)
+                {
+                    LUT[i] = 255;
+                }
+                else if ((b + i) < 0)
+                {
+                    LUT[i] = 0;
+                }
+                else
+                {
+                    LUT[i] = (byte)(b + i);
+                }
+            }
+
+            Bitmap bitmap = new Bitmap(bmp);
+
+            BitmapData bmpData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, bitmap.PixelFormat);
+            byte[] pixelValues = new byte[Math.Abs(bmpData.Stride) * bitmap.Height];
+            Marshal.Copy(bmpData.Scan0, pixelValues, 0, pixelValues.Length);
+
+            for (int i = 0; i < pixelValues.Length; i++)
+            {
+                pixelValues[i] = LUT[pixelValues[i]];
+            }
+
+            Marshal.Copy(pixelValues, 0, bmpData.Scan0, pixelValues.Length);
+            bitmap.UnlockBits(bmpData);
+
+            Histogram(bitmap, wpfPlot);
+            return bitmap;
+        } 
+        public Bitmap HistogramStretching(Bitmap bmp, WpfPlot wpfPlot, double threshold)
         {
             int[] histogram = Histogram(bmp, wpfPlot);
 
-            int[] LUTred = calculateLUT(red);
-            int[] LUTgreen = calculateLUT(green);
-            int[] LUTblue = calculateLUT(blue);
+            int[] LUTred = calculateLUT(red, threshold);
+            int[] LUTgreen = calculateLUT(green, threshold);
+            int[] LUTblue = calculateLUT(blue, threshold);
 
             red = new int[256];
             green = new int[256];
             blue = new int[256];
             
-
             Bitmap newBitmap = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 
             for (int x = 0; x < bmp.Width; x++)
@@ -180,7 +238,7 @@ namespace BiometriaZad2
                 }
             }
 
-            //MakePlot(newHistogram.Select(d => (int)d).ToArray(), wpfPlot);
+            Histogram(newBitmap, wpfPlot);
             return newBitmap;
         }
         public Bitmap HistogramEqualization(Bitmap bmp, WpfPlot wpfPlot)
@@ -189,10 +247,10 @@ namespace BiometriaZad2
             int[] LUTgreen = calculateLUT(green, bmp.Width * bmp.Height);
             int[] LUTblue = calculateLUT(blue, bmp.Width * bmp.Height);
 
-            red = new int[256];
-            green = new int[256];
-            blue = new int[256];
+            red = green =  blue = new int[256];
+
             Bitmap newBitmap = new Bitmap(bmp.Width, bmp.Height, PixelFormat.Format24bppRgb);
+
             for (int x = 0; x < bmp.Width; x++)
             {
                 for (int y = 0; y < bmp.Height; y++)
@@ -205,37 +263,42 @@ namespace BiometriaZad2
                     blue[newPixel.B]++;
                 }
             }
+
+            Histogram(newBitmap, wpfPlot);
             return newBitmap;
         }
-        public Bitmap BinaryThreshold(Bitmap bmp, byte threshold)
+        public Bitmap BinaryThreshold(Bitmap bmp, byte threshold, WpfPlot wpfPlot)
         {
-            var data = bmp.LockBits(
-                new Rectangle(0, 0, bmp.Width, bmp.Height),
+            Bitmap newBitmap = new Bitmap(bmp);
+            var data = newBitmap.LockBits(
+                new Rectangle(0, 0, newBitmap.Width, newBitmap.Height),
                 System.Drawing.Imaging.ImageLockMode.ReadWrite,
                 System.Drawing.Imaging.PixelFormat.Format24bppRgb
             );
 
-            var bmpData = new byte[data.Width * 3 * data.Height];
+            var newBitmapData = new byte[data.Width     * 3 * data.Height];
 
-            Marshal.Copy(data.Scan0, bmpData, 0, bmpData.Length);
+            Marshal.Copy(data.Scan0, newBitmapData, 0, newBitmapData.Length);
 
-            for (int i = 0; i < bmpData.Length; i += 3)
+            for (int i = 0; i < newBitmapData.Length; i += 3)
             {
-                byte r = bmpData[i + 0];
-                byte g = bmpData[i + 1];
-                byte b = bmpData[i + 2];
+                byte r = newBitmapData[i + 0];
+                byte g = newBitmapData[i + 1];
+                byte b = newBitmapData[i + 2];
 
                 byte mean = (byte)((r + g + b) / 3);
 
-                bmpData[i + 0] =
-                bmpData[i + 1] =
-                bmpData[i + 2] = mean > threshold ? byte.MaxValue : byte.MinValue;
+                newBitmapData[i + 0] =
+                newBitmapData[i + 1] =
+                newBitmapData[i + 2] = mean > threshold ? byte.MaxValue : byte.MinValue;
             }
 
-            Marshal.Copy(bmpData, 0, data.Scan0, bmpData.Length);
+            Marshal.Copy(newBitmapData, 0, data.Scan0, newBitmapData.Length);
 
-            bmp.UnlockBits(data);
-            return bmp;
+            newBitmap.UnlockBits(data);
+
+            Histogram(newBitmap, wpfPlot);
+            return newBitmap;
         }
     }
 }
